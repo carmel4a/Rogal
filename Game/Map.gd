@@ -1,14 +1,15 @@
-extends TileMap
+extends Node
 
 #in chunks
-var chunk_no = Vector2(3,3)
+var chunk_no = Vector2(20,20)
 #in tiles. Must be >=1.
-var chunk_size = Vector2(10,10)
+var chunk_size = Vector2(20,20)
 
 #PRIVATE
 onready var districts = get_node("districts")
 onready var area = get_node("area")
-onready var cam = get_node("../Camera")
+onready var map = get_node("map")
+onready var cam = get_node("../BasicCamera")
 # position_of_chunk:tile
 var chunk = {}
 
@@ -31,7 +32,7 @@ func generate():
 					chunk[Vector2(ix,iy)][Vector2(xx,yy)] = {\
 									"districts": {"type":int(-1),"position": Vector2(-1,-1)},
 									"area": {"type":int(-1)},
-									"type": int(-1)}
+									"map": {"type":int(-1)}}
 			generate_chunk(chunk[Vector2(ix,iy)])
 	update()
 
@@ -45,38 +46,34 @@ func retangle(chunk,wh,t,b=false,bt=null):
 	if ((b == false) and (wh.x >= 1) and (wh.y >= 1)):
 		for x in range(wh.x):
 			for y in range(wh.y):
-				chunk[Vector2(x,y)]["type"] = t
+				chunk[Vector2(x,y)]["map"]["type"] = t
 		return (true)
 	if ((b == true) and (wh.x > 2) and (wh.y > 2) and (typeof(bt)==TYPE_INT)):
 		for x in range(wh.x-2):
 			for y in range(wh.y-2):
-				chunk[Vector2(x+1,y+1)]["type"] = t
+				chunk[Vector2(x+1,y+1)]["map"]["type"] = t
 		for x in range(wh.x):
-				chunk[Vector2(x,0)]["type"] = bt
-				chunk[Vector2(x,wh.y-1)]["type"] = bt
+				chunk[Vector2(x,0)]["map"]["type"] = bt
+				chunk[Vector2(x,wh.y-1)]["map"]["type"] = bt
 		for y in range(wh.y-2):
-				chunk[Vector2(0,y+1)]["type"] = bt
-				chunk[Vector2(wh.x-1,y+1)]["type"] = bt
+				chunk[Vector2(0,y+1)]["map"]["type"] = bt
+				chunk[Vector2(wh.x-1,y+1)]["map"]["type"] = bt
 		return (true)
 	print("Error 2: Map is too small.")
 	return (false)
 
 func update():
-	var to_draw_struct = {"":null,"districts":districts,"area":area}
-	clear()
+	var to_draw_struct = {"map":map,"districts":districts,"area":area}
 	for layer in to_draw_struct.keys():
-		if (layer != ""):
-			to_draw_struct[layer].clear()
+		to_draw_struct[layer].clear()
 		for xx in range(chunk_no.x):
 			for yy in range(chunk_no.y):
 				if ((xx>=0)and(yy>=0)and(xx<chunk_no.x)and(yy<chunk_no.y)):
 					for xxx in range(chunk_size.x):
 						for yyy in range(chunk_size.y):
-							if (layer != ""):
-								if (chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]!=-1):
-									to_draw_struct[layer].set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]["type"])
-							else:
-								set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[Vector2(xx,yy)][Vector2(xxx,yyy)]["type"])
+							if (chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]!=-1):
+								to_draw_struct[layer].set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]["type"])
+
 
 func district_generator(chunk):
 	for i in range(5):
