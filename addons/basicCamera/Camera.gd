@@ -1,6 +1,6 @@
 ###################
 #                 #
-#  Main camera    #
+#  Basic Camera   #
 #                 #
 ###################
 extends Camera2D
@@ -10,25 +10,27 @@ extends Camera2D
 # drag - by right mouse button;
 # edge - by moving mouse to the window edge
 # wheel zoom in/out by mouse wheel
-var key = true
-var drag = true
-var edge = false
-var wheel = true
 
-# Initial zoom value taken from Editor.
-var camera_zoom = get_zoom()
+export(bool) var key = true
+export(bool) var drag = true
+export(bool) var edge = false
+export(bool) var wheel = true
 
 # Value meaning how near to the window frame (in px) the mouse must be, to shift a view.
-const camera_margin = 50
+export(int) var camera_margin = 50
 
 # Camera speed in px/s. It is changing in the code by zoom, to keep const. speed value.
-var camera_speed = 450 
+export(int) var camera_speed = 450 
+
 
 # It changes a camera zoom value in ?units, but it works... (x, y) (ps. prob. in view multiples ).
-const camera_zoom_speed = Vector2(0.5, 0.5)
+export var camera_zoom_speed = Vector2(0.5, 0.5)
 
 # Vector of actual position of camera.
 var camera_movement = Vector2()
+
+# Initial zoom value taken from Editor.
+var camera_zoom = get_zoom()
 
 # Previouse mouse position used to count delta of the mouse movement.
 var prev_mouse_pos = null
@@ -41,10 +43,9 @@ func _ready():
 
 func _fixed_process(delta):
 	# Set camera movement to zero, and update camera speed.
-	camera_speed = 450
 	camera_movement = Vector2(0,0)
 	
-	# Control by keyboard handled by @ImputMap.
+	# Control by keyboard handled by ImputMap.
 	if key == true:
 		if Input.is_action_pressed("ui_up"):
 			camera_movement.y -= camera_speed * delta
@@ -77,13 +78,13 @@ func _fixed_process(delta):
 
 
 func _input(event):
-# [!] Checking if user used mouse wheel. ! not handled by @ImputMap.
+# Checking if user used mouse wheel. ! not handled by ImputMap.
 	if (event.type == InputEvent.MOUSE_BUTTON) and (wheel == true):
-		# Checing if potential zoom won't zoom under 0; in that cause Engine'll flip screen.
+		# Checing if potential zoom won't zoom under 0; in that cause Engine will flip screen.
 		if ((event.button_index == BUTTON_WHEEL_UP) and (((camera_zoom.x - camera_zoom_speed.x) > 0) or ((camera_zoom.y - camera_zoom_speed.y) > 0))):
 			camera_zoom -= camera_zoom_speed
 			set_zoom(camera_zoom)
-		# [!] there should be any limit to zoom out!
+		# There should be limit to zoom out!
 		if event.button_index == BUTTON_WHEEL_DOWN:
 			camera_zoom += camera_zoom_speed
 			set_zoom(camera_zoom)
