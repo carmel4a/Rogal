@@ -1,22 +1,41 @@
 extends TileMap
 
 #in chunks
-var chunk_no = Vector2(20,20)
+var chunk_no = Vector2(10,10)
 #in tiles. Must be >=1.
 var chunk_size = Vector2(20,20)
 
 #PRIVATE
-onready var distr_tilemap = get_node("Districts")
-onready var distr_area_tilemap = get_node("Districts_area")
-
+onready var districts = get_node("districts")
+onready var area = get_node("area")
+onready var to_draw_struct = {"":null,"districts":districts,"area":area}
+onready var cam = get_node("../Camera")
 # position_of_chunk:tile
 var chunk = {}
 # position_in_chunk:{values:keys}
-
+onready var visx = Vector2(0,0)
+onready var visy = Vector2(0,0)
+onready var old_x = Vector2(1,1)
+onready var old_y = Vector2(1,1)
 
 func _ready():
 	generate()
+	set_process(true)
 	
+func _process(delta):
+	visx = Vector2(floor((cam.get_global_pos().x*(1/cam.get_zoom().x) - get_viewport_rect().size.x/2) / ((chunk_size.x*32 * (1/cam.get_zoom().x)))),\
+		floor((cam.get_global_pos().y*(1/cam.get_zoom().y) - get_viewport_rect().size.y/2) / ((chunk_size.y*32 * (1/cam.get_zoom().y)))))
+	visy = Vector2(floor((cam.get_global_pos().x*(1/cam.get_zoom().x) + get_viewport_rect().size.x/2) / ((chunk_size.x*32 * (1/cam.get_zoom().x)))),\
+		floor((cam.get_global_pos().y*(1/cam.get_zoom().y) + get_viewport_rect().size.y/2) / ((chunk_size.y*32 * (1/cam.get_zoom().y)))))
+#	floor((cam.get_global_pos().x*(1/cam.get_zoom().x) - get_viewport_rect().size.x/2) / ((chunk_size.x*32 * (1/cam.get_zoom().x))))
+#	floor((cam.get_global_pos().y*(1/cam.get_zoom().y) - get_viewport_rect().size.y/2) / ((chunk_size.y*32 * (1/cam.get_zoom().y))))
+#	floor((cam.get_global_pos().x*(1/cam.get_zoom().x) + get_viewport_rect().size.x/2) / ((chunk_size.x*32 * (1/cam.get_zoom().x))))
+#	floor((cam.get_global_pos().y*(1/cam.get_zoom().y) + get_viewport_rect().size.y/2) / ((chunk_size.y*32 * (1/cam.get_zoom().y))))
+	if ((visx != old_x) or (visy != old_y)):
+		old_x = visx
+		old_y = visy
+		update(visx, visy)
+	print(delta)
 func generate():
 	chunk.clear()
 	randomize()
@@ -28,20 +47,20 @@ func generate():
 			for xx in range (chunk_size.x):
 				for yy in range (chunk_size.y):
 					tile[Vector2(xx,yy)]={\
-						"districts": int(-1),
-						"area": int(-1),
+						"districts": {"type":int(-1),"position": Vector2(-1,-1)},
+						"area": {"type":int(-1)},
 						"type": int(-1)}
 					chunk[Vector2(ix,iy)][Vector2(xx,yy)] = tile[Vector2(xx,yy)]
 			generate_chunk(chunk[Vector2(ix,iy)])
-	update()
+	update(visx,visy)
 	
 func generate_chunk(ch):
 
 	retangle(ch,chunk_size,2,true,1) # 2 is a number of tile in the tileset
 #	retangle(ch,chunk_size,2,false) # 2 is a number of tile in the tileset
 
-#	district_generator()
-#	areaing()
+	district_generator(ch)
+	areaing(ch)
 #	city_generate()
 
 
@@ -51,7 +70,6 @@ func retangle(chunk,wh,t,b=false,bt=null):
 			for y in range(wh.y):
 				chunk[Vector2(x,y)]["type"] = t
 		return (true)
-		
 	if ((b == true) and (wh.x > 2) and (wh.y > 2) and (typeof(bt)==TYPE_INT)):
 		for x in range(wh.x-2):
 			for y in range(wh.y-2):
@@ -65,12 +83,24 @@ func retangle(chunk,wh,t,b=false,bt=null):
 		return (true)
 	print("Error 2: Map is too small.")
 	return (false)
-func update():
-	for xx in range(chunk_no.x):
-		for yy in range(chunk_no.y):
-			for xxx in range(chunk_size.x):
-				for yyy in range(chunk_size.y):
-					set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[Vector2(xx,yy)][Vector2(xxx,yyy)]["type"])
+func update(vx,vy):
+	clear()
+	for layer in to_draw_struct.keys():
+		if (layer != ""):
+			to_draw_struct[layer].clear()
+#		for xx in range(chunk_no.x):
+#			for yy in range(chunk_no.y):
+
+		for xx in range(visx.x,visy.x):
+			for yy in range(visx.y,visy.y):
+				if ((xx>=0)and(yy>=0)and(xx<chunk_no.x)and(yy<chunk_no.y)):
+					for xxx in range(chunk_size.x):
+						for yyy in range(chunk_size.y):
+							if (layer != ""):
+								if (chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]!=-1):
+									to_draw_struct[layer].set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]["type"])
+							else:
+								set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[Vector2(xx,yy)][Vector2(xxx,yyy)]["type"])
 	
 #func map_resize(size):
 #	map_content.clear()
@@ -100,62 +130,71 @@ func update():
 #			for i in area.keys():
 #				if i == Vector2(x,y):
 #					distr_area.set_cell(x,y,area[i])
-#func district_generator():
-#	for i in range(15):
-#		var t
-#		if (round(randf())>=0.5):
-#			t = 3
-#		else:
-#			t = 4
-#		var e = true
-#		if (map_district.values().size()==0):
-#			var v = Vector2(round(rand_range(1,map_size.x-1)),round(rand_range(1,map_size.y-1)))
-#			make_district(v,t)
-#		else:
-#			for i in map_district.values():
-#				var v = Vector2(round(rand_range(1,map_size.x-1)),round(rand_range(1,map_size.y-1)))
-#				if (i==v):
-#					e = true
-#				else:
-#					make_district(v,t)
-#					e = false
-#					break
-#func make_district(position,type):
-#	map_district[str(map_district.size())] = {"position":position,"type":type}
-#func circle(pos,to_expand,t):
-#	if (area.has(pos)==false):
-#		if ((t != 5) or (t!=6)):
-#			area[pos] = t+2
-#	if ((area.has(Vector2(pos.x-1,pos.y))==false) and !(pos.x-1<0)):
-#		if ((t != 5) or (t!=6)):
-#			area[Vector2(pos.x-1,pos.y)] = t+2
-#		to_expand[Vector2(pos.x-1,pos.y)] = t
-#	if ((area.has(Vector2(pos.x,pos.y-1))==false) and !(pos.y-1<0)):
-#		if ((t != 5) or (t!=6)):
-#			area[Vector2(pos.x,pos.y-1)] = t+2
-#		to_expand[Vector2(pos.x,pos.y-1)] = t
-#	if ((area.has(Vector2(pos.x+1,pos.y))==false) and !(pos.x+1>map_size.x)):
-#		if ((t != 5) or (t!=6)):
-#			area[Vector2(pos.x+1,pos.y)] = t+2
-#		to_expand[Vector2(pos.x+1,pos.y)] = t
-#	if ((area.has(Vector2(pos.x,pos.y+1))==false) and !(pos.y+1>map_size.y)):
-#		if ((t != 5) or (t!=6)):
-#			area[Vector2(pos.x,pos.y+1)] = t+2
-#		to_expand[Vector2(pos.x,pos.y+1)] = t
-#func areaing():
-#	var to_expand={}
-#	var blokade = {}
-#	for i in map_district.values():
-#		to_expand[i["position"]] = i["type"]
-#	while(!to_expand.empty()):
-#		for i in to_expand.keys():
-#			print(to_expand)
-#			if (blokade.has(i)==false):
-#				circle(i,to_expand,to_expand[i])
-#				blokade[i]=null
-#				to_expand.erase(i)
-#			else:
-#				to_expand.erase(i)
+func district_generator(chunk):
+	for i in range(5):
+		var t
+		if (round(randf())>=0.5):
+			t = 3
+		else:
+			t = 4
+		var e = true
+		var empty = true
+		for c in chunk.keys():
+			if (chunk[c]["districts"] != -1):
+				empty = false
+				break
+		if (empty == true):
+			var v = Vector2(round(rand_range(1,chunk_size.x-1)),round(rand_range(1,chunk_size.y-1)))
+			make_district(v,t,chunk)
+		else:
+			for cc in chunk.keys():
+
+				var v = Vector2(round(rand_range(1,chunk_size.x-1)),round(rand_range(1,chunk_size.y-1)))
+				if (chunk[cc]["districts"]["position"]==v):
+					e = true
+				else:
+					make_district(v,t,chunk)
+					print(t)
+					e = false
+					break
+func make_district(position,type,chunk):
+	chunk[position]["districts"] = {"type":type,"position":position}
+
+func areaing(chunk):
+	var to_expand = {}
+	var blokade = []
+	for pos in chunk.keys():
+		if (chunk[pos]["districts"]!=-1):
+			if (chunk[pos]["districts"]["type"]!=-1):
+				to_expand[pos] = chunk[pos]["districts"]["type"]
+	while(!to_expand.empty()):
+		for pos in to_expand.keys():
+			if (blokade.has(pos)==false):
+				circle(pos,to_expand,chunk)
+				blokade.append(pos)
+			to_expand.erase(pos)
+				
+
+func circle(pos,to_expand,chunk):
+	if (chunk[pos]["area"]["type"] == -1 ):
+		chunk[pos]["area"]  = {"type":to_expand[pos]+2}
+	if ((pos.x-1>=0)):
+		if (chunk[Vector2(pos.x-1,pos.y)]["area"]["type"] == -1):
+			to_expand[Vector2(pos.x-1,pos.y)] = to_expand[pos]
+			chunk[Vector2(pos.x-1,pos.y)]["area"]["type"] = to_expand[pos]+2
+	if ((pos.y-1>=0)):
+		if (chunk[Vector2(pos.x,pos.y-1)]["area"]["type"] == -1):
+			to_expand[Vector2(pos.x,pos.y-1)] = to_expand[pos]
+			chunk[Vector2(pos.x,pos.y-1)]["area"]["type"] = to_expand[pos]+2
+	if (pos.x+1<chunk_size.x):
+		if (chunk[Vector2(pos.x+1,pos.y)]["area"]["type"] == -1):
+			to_expand[Vector2(pos.x+1,pos.y)] = to_expand[pos]
+			chunk[Vector2(pos.x+1,pos.y)]["area"]["type"] = to_expand[pos]+2
+	if (pos.y+1<chunk_size.y):
+		if (chunk[Vector2(pos.x,pos.y+1)]["area"]["type"] == -1):
+			to_expand[Vector2(pos.x,pos.y+1)] = to_expand[pos]
+			chunk[Vector2(pos.x,pos.y+1)]["area"]["type"] = to_expand[pos]+2
+
 #func city_generate():
 #	retangle(map_size,Vector2(0,0),5,false,null)
 #	
