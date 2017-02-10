@@ -1,9 +1,9 @@
 extends Node
 
 #in chunks
-var chunk_no = Vector2(20,20)
+var chunk_no = Vector2(10,10)
 #in tiles. Must be >=1.
-var chunk_size = Vector2(20,20)
+var chunk_size = Vector2(10,10)
 
 #PRIVATE
 onready var districts = get_node("districts")
@@ -34,30 +34,31 @@ func generate():
 									"area": {"type":int(-1)},
 									"map": {"type":int(-1)}}
 			generate_chunk(chunk[Vector2(ix,iy)])
+	wall_generate()
 	update()
 
 func generate_chunk(ch):
-	retangle(ch,chunk_size,2,true,1) # 2 is a number of tile in the tileset
-	district_generator(ch)
-	areaing(ch)
-#	city_generate()
+	retangle(ch,map,chunk_size,2,true,1) # 2 is a number of tile in the tileset
+#	district_generator(ch)
+#	areaing(ch)
 
-func retangle(chunk,wh,t,b=false,bt=null):
+
+func retangle(chunk,layer,wh,t,b=false,bt=null):
 	if ((b == false) and (wh.x >= 1) and (wh.y >= 1)):
 		for x in range(wh.x):
 			for y in range(wh.y):
-				chunk[Vector2(x,y)]["map"]["type"] = t
+				chunk[Vector2(x,y)][layer]["type"] = t
 		return (true)
 	if ((b == true) and (wh.x > 2) and (wh.y > 2) and (typeof(bt)==TYPE_INT)):
 		for x in range(wh.x-2):
 			for y in range(wh.y-2):
-				chunk[Vector2(x+1,y+1)]["map"]["type"] = t
+				chunk[Vector2(x+1,y+1)][layer.get_name()]["type"] = t
 		for x in range(wh.x):
-				chunk[Vector2(x,0)]["map"]["type"] = bt
-				chunk[Vector2(x,wh.y-1)]["map"]["type"] = bt
+				chunk[Vector2(x,0)][layer.get_name()]["type"] = bt
+				chunk[Vector2(x,wh.y-1)][layer.get_name()]["type"] = bt
 		for y in range(wh.y-2):
-				chunk[Vector2(0,y+1)]["map"]["type"] = bt
-				chunk[Vector2(wh.x-1,y+1)]["map"]["type"] = bt
+				chunk[Vector2(0,y+1)][layer.get_name()]["type"] = bt
+				chunk[Vector2(wh.x-1,y+1)][layer.get_name()]["type"] = bt
 		return (true)
 	print("Error 2: Map is too small.")
 	return (false)
@@ -73,7 +74,6 @@ func update():
 						for yyy in range(chunk_size.y):
 							if (chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]!=-1):
 								to_draw_struct[layer].set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[Vector2(xx,yy)][Vector2(xxx,yyy)][layer]["type"])
-
 
 func district_generator(chunk):
 	for i in range(5):
@@ -138,6 +138,15 @@ func circle(pos,to_expand,chunk):
 			to_expand[Vector2(pos.x,pos.y+1)] = to_expand[pos]
 			chunk[Vector2(pos.x,pos.y+1)]["area"]["type"] = to_expand[pos]+2
 
-#func city_generate():
-#	retangle(map_size,Vector2(0,0),5,false,null)
-#	
+func wall_generate():
+	var ar={}
+	for x in range(chunk_size.x*chunk_no.x):
+		for y in range(chunk_size.y*chunk_no.y):
+			ar[Vector2(x,y)]={"type":5}
+	rect_to_chunk(Vector2(0,0),Vector2(chunk_no.x,chunk_no.y),ar,"area")
+func rect_to_chunk(begin,end,from,to):
+	for ix in range(begin.x,end.x):
+		for iy in range(begin.y,end.y):
+			for ixx in range(chunk_size.x):
+				for iyy in range(chunk_size.y):
+					chunk[Vector2(ix,iy)][Vector2(ixx,iyy)][to] = from[Vector2(chunk_size.x*ix+ixx,chunk_size.y*iy+iyy)]
