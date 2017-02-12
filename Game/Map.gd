@@ -1,9 +1,9 @@
 extends Node
 
 #in chunks
-var chunk_no = Vector2(10,10)
+var chunk_no = Vector2(5,5)
 #in tiles. Must be >=1.
-var chunk_size = Vector2(10,10)
+var chunk_size = Vector2(5,5)
 
 #PRIVATE
 onready var districts = get_node("districts")
@@ -140,13 +140,18 @@ func circle(pos,to_expand,chunk):
 
 func wall_generate():
 	var ar={}
+	
 	for x in range(chunk_size.x*chunk_no.x):
 		for y in range(chunk_size.y*chunk_no.y):
+			print("woorking "+str(x))
 			ar[Vector2(x,y)]={"type":5}
+	print("woorking")
 	rect_to_chunk(Vector2(0,0),Vector2(chunk_no.x,chunk_no.y),ar,"area")
 func rect_to_chunk(begin,end,from,to):
+	print("woorking")
 	for ix in range(begin.x,end.x):
 		for iy in range(begin.y,end.y):
 			for ixx in range(chunk_size.x):
 				for iyy in range(chunk_size.y):
+
 					chunk[Vector2(ix,iy)][Vector2(ixx,iyy)][to] = from[Vector2(chunk_size.x*ix+ixx,chunk_size.y*iy+iyy)]
