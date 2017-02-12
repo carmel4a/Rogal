@@ -31,12 +31,12 @@ func generate():
 			for xx in range (chunk_size.x):
 				chunk[ix][iy].append([])
 				for yy in range (chunk_size.y):
+					chunk[ix][iy].append([])
 					chunk[ix][iy][xx].append([])
 					chunk[ix][iy][xx][yy] = {\
 									"districts": {"type":int(-1),"position": Vector2(-1,-1)},
 									"area": {"type":int(-1)},
 									"map": {"type":int(-1)}}
-									
 			generate_chunk(chunk[ix][iy])
 	wall_generate()
 	update()
@@ -145,14 +145,19 @@ func circle(pos,to_expand,chunk):
 			chunk[pos.x][pos.y+1]["area"]["type"] = to_expand[pos]+2
 
 func wall_generate():
-	var ar={}
+	var ar=[]
+	
+
 	for x in range(chunk_size.x*chunk_no.x):
+		ar.append([])
 		for y in range(chunk_size.y*chunk_no.y):
-			ar[Vector2(x,y)]={"type":5}
+			ar[x].append([])
+			ar[x][y]={"type":5}
+
 	rect_to_chunk(Vector2(0,0),Vector2(chunk_no.x,chunk_no.y),ar,"area")
 func rect_to_chunk(begin,end,from,to):
 	for ix in range(begin.x,end.x):
 		for iy in range(begin.y,end.y):
 			for ixx in range(chunk_size.x):
 				for iyy in range(chunk_size.y):
-					chunk[ix][iy][ixx][iyy][to] = from[Vector2(chunk_size.x*ix+ixx,chunk_size.y*iy+iyy)]
+					chunk[ix][iy][ixx][iyy][to] = from[chunk_size.x*ix+ixx][chunk_size.y*iy+iyy]
