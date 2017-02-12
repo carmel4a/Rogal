@@ -28,10 +28,9 @@ occluder/light_mask = 1
 tile_data = IntArray( 1638444, 2 )
 script/script = ExtResource( 2 )
 
-[node name="area" type="TileMap" parent="Map"]
+[node name="districts" type="TileMap" parent="Map"]
 
-z/z = 2
-z/relative = false
+z/z = 3
 mode = 0
 tile_set = ExtResource( 1 )
 cell/size = Vector2( 16, 16 )
@@ -48,10 +47,9 @@ collision/mask = 1
 occluder/light_mask = 1
 tile_data = IntArray( 1638444, 2 )
 
-[node name="districts" type="TileMap" parent="Map"]
+[node name="area" type="TileMap" parent="Map"]
 
-z/z = 1
-z/relative = false
+z/z = 2
 mode = 0
 tile_set = ExtResource( 1 )
 cell/size = Vector2( 16, 16 )
@@ -71,7 +69,6 @@ tile_data = IntArray( 1638444, 2 )
 [node name="map" type="TileMap" parent="Map"]
 
 z/z = 1
-z/relative = false
 mode = 0
 tile_set = ExtResource( 1 )
 cell/size = Vector2( 16, 16 )

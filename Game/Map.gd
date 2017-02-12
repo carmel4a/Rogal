@@ -38,13 +38,13 @@ func generate():
 									"area": {"type":int(-1)},
 									"map": {"type":int(-1)}}
 			generate_chunk(chunk[ix][iy])
-	wall_generate()
+#	wall_generate()
 	update()
 
 func generate_chunk(ch):
 	retangle(ch,map,chunk_size,2,true,1) # 2 is a number of tile in the tileset
-#	district_generator(ch)
-#	areaing(ch)
+	district_generator(ch)
+	areaing(ch)
 
 
 func retangle(chunk,layer,wh,t,b=false,bt=null):
@@ -82,38 +82,39 @@ func update():
 func district_generator(chunk):
 	for i in range(5):
 		var t
-		if (round(randf())>=0.5):
+		if (round(randf())>=0.5): #LOLZ
 			t = 3
 		else:
 			t = 4
 		var e = true
 		var empty = true
-		for x in chunk:
-			for y in chunk[x]:
-				if (chunk[x][y]["districts"] != -1):
+		for x in range(chunk.size()):
+			for y in range(chunk[x].size()):
+				if (chunk[x][y]["districts"]["type"] != -1):
 					empty = false
 					break
 		if (empty == true):
 			var v = Vector2(round(rand_range(1,chunk_size.x-1)),round(rand_range(1,chunk_size.y-1)))
 			make_district(v,t,chunk)
 		else:
-			for x in chunk:
-				for y in chunk[x]:
+			for xx in range(chunk.size()):
+				for yy in range(chunk[xx].size()):
 					var v = Vector2(round(rand_range(1,chunk_size.x-1)),round(rand_range(1,chunk_size.y-1)))
-					if (chunk[x][y]["districts"]["position"]==v):
+					if (chunk[xx][yy]["districts"]["position"]==v):
 						e = true
 					else:
 						make_district(v,t,chunk)
 						e = false
 						break
+				if (e == false):
+					break
 func make_district(position,type,chunk):
-	chunk[position.x][position.x]["districts"] = {"type":type,"position":position}
-
+	chunk[position.x][position.y]["districts"] = {"type":type,"position":position}
 func areaing(chunk):
 	var to_expand = {}
 	var blokade = []
-	for x in chunk:
-		for y in chunk[x]:
+	for x in range(chunk.size()):
+		for y in range(chunk[x].size()):
 			if (chunk[x][y]["districts"]!=-1):
 				if (chunk[x][y]["districts"]["type"]!=-1):
 					to_expand[Vector2(x,y)] = chunk[x][y]["districts"]["type"]
@@ -126,7 +127,7 @@ func areaing(chunk):
 
 func circle(pos,to_expand,chunk):
 	if (chunk[pos.x][pos.y]["area"]["type"] == -1 ):
-		chunk[pos][pos.y]["area"]  = {"type":to_expand[pos]+2}
+		chunk[pos.x][pos.y]["area"]  = {"type":to_expand[pos]+2}
 	if ((pos.x-1>=0)):
 		if (chunk[pos.x-1][pos.y]["area"]["type"] == -1):
 			to_expand[Vector2(pos.x-1,pos.y)] = to_expand[pos]
