@@ -40,13 +40,13 @@ func generate():
 									"area": {"type":int(-1)},
 									"map": {"type":int(-1)}}
 			generate_chunk(chunk[ix][iy])
-#	wall_generate()
+	wall_generate()
 	update()
 
 func generate_chunk(ch):
 	retangle(ch,map,chunk_size,2,true,1) # 2 is a number of tile in the tileset
-	district_generator(ch)
-	areaing(ch)
+#	district_generator(ch)
+#	areaing(ch)
 
 
 func retangle(chunk,layer,wh,t,b=false,bt=null):
@@ -79,6 +79,8 @@ func update():
 					for xxx in range(chunk_size.x):
 						for yyy in range(chunk_size.y):
 							if (chunk[xx][yy][xxx][yyy][layer]!=-1):
+#								if ((chunk[xx][yy][xxx][yyy][layer].has("type"))==true):
+#								To forcee renddering, even w/o metadata	
 								to_draw_struct[layer].set_cell(xx*chunk_size.x+xxx,yy*chunk_size.y+yyy,chunk[xx][yy][xxx][yyy][layer]["type"])
 
 func district_generator(chunk):
@@ -149,18 +151,37 @@ func circle(pos,to_expand,chunk):
 
 func wall_generate():
 	var ar=[]
-
 	for x in range(chunk_size.x*chunk_no.x):
 		ar.append([])
 		for y in range(chunk_size.y*chunk_no.y):
 			ar[x].append([])
 			ar[x][y]={"type":5}
-
-	rect_to_chunk(Vector2(0,0),Vector2(chunk_no.x,chunk_no.y),ar,"area")
+	rect_to_chunk(Vector2(1,1),Vector2(chunk_no.x,chunk_no.y),ar,"area")
+	ar.clear()
+	for x in range(chunk_size.x*(chunk_no.x)):
+		ar.append([])
+		for y in range(chunk_size.y):
+			ar[x].append([])
+			ar[x][y]={"type":5}
+	var dist = rand_range(3,7)
+	for x in range (chunk_size.x*chunk_no.x):
+		if (randf() < 0.25):
+			if (randf() >= 0.5):
+				dist = dist + 1
+			else:
+				dist = dist -1
+		if (dist < 3 ):
+			dist = 3
+		if (dist > 7 ):
+			dist = 7
+		for y in range(dist):
+			ar[x][y] = {"type":6}
+		ar[x][dist] = {"type":7}
+	rect_to_chunk(Vector2(1,1),Vector2(chunk_no.x,1),ar,"area")
 func rect_to_chunk(begin,end,from,to):
-	print("woorking")
-	for ix in range(begin.x,end.x):
-		for iy in range(begin.y,end.y):
+	for ix in range(0,(end.x-begin.x)+1):
+		for iy in range(0,(end.y-begin.y)+1):
 			for ixx in range(chunk_size.x):
 				for iyy in range(chunk_size.y):
-					chunk[ix][iy][ixx][iyy][to] = from[chunk_size.x*ix+ixx][chunk_size.y*iy+iyy]
+					if ( chunk[begin.x+ix-1][begin.y+iy-1][ixx][iyy][to].has("type") == true ):
+						chunk[begin.x+ix-1][begin.y+iy-1][ixx][iyy][to] = from[chunk_size.x*ix+ixx][chunk_size.y*iy+iyy]
